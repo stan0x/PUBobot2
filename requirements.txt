@@ -24,3 +24,4 @@ trueskill==0.4.5
 urllib3==2.2.0
 wcwidth==0.2.13
 yarl==1.9.4
+pyreadline==2.1
