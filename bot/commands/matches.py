@@ -49,7 +49,7 @@ async def set_ready_admin(ctx, match_id: int, player: Member):
 	if player not in match.players:
 		raise bot.Exc.NotFoundError(ctx.qc.gt("Specified player is not in this match."))
 	await match.check_in.set_ready(ctx, player, True)
-	await ctx.reply(ctx.qc.gt("{player} has been checked in.").format(player=f"<@{player.id}>"))
+	await ctx.send(ctx.qc.gt("{player} has been checked in.").format(player=f"<@{player.id}>"))
 
 
 @author_match
