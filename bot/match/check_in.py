@@ -33,14 +33,23 @@ class CheckIn:
 
 		self.available_servers = self.m.available_servers()
 		self.server_votes = [set() for i in self.available_servers]
-    
-		if len(self.m.cfg['maps']) > 1 and self.m.cfg['vote_maps']:			
-			if self.m.cfg['map_pools']:
-				pool = copy.deepcopy(next((pool for pool in self.m.cfg['map_pools'] if pool["name"] == self.m.cfg['map_current_pool']), 
-							self.m.cfg['map_default_pool']))
-				self.maps = self.m.random_maps(pool['maps'], self.m.cfg['vote_maps'], self.m.queue.last_maps)
-			else:	
-				self.maps = self.m.random_maps(self.m.cfg['maps'], self.m.cfg['vote_maps'], self.m.queue.last_maps)
+		
+		# Determine available maps from map_pools or direct maps setting
+		available_maps = []
+		if self.m.cfg['map_pools'] and self.m.cfg['vote_maps']:
+			pool = next((pool for pool in self.m.cfg['map_pools'] if pool["name"] == self.m.cfg['map_current_pool']), None)
+			if pool is None:
+				pool = next((pool for pool in self.m.cfg['map_pools'] if pool["name"] == self.m.cfg['map_default_pool']), None)
+			if pool is None and self.m.cfg['map_pools']:
+				pool = self.m.cfg['map_pools'][0]
+			if pool:
+				pool = copy.deepcopy(pool)
+				available_maps = pool['maps'] if isinstance(pool['maps'], list) else []
+		elif len(self.m.cfg['maps']) > 1:
+			available_maps = self.m.cfg['maps']
+		
+		if len(available_maps) > 1 and self.m.cfg['vote_maps']:
+			self.maps = self.m.random_maps(available_maps, self.m.cfg['vote_maps'], self.m.queue.last_maps)
 			maps_img = map_stitch(self.maps)
 			# Generate map thumbnails
 			self.image = maps_img

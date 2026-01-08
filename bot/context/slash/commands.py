@@ -277,6 +277,15 @@ _put.on_autocomplete('team_name')(autocomplete.teams_by_match_id)
 _put.on_autocomplete('match_id')(autocomplete.match_ids)
 
 
+@groups.admin_match.subcommand(name='check_in_player', description='Manually check in a player.')
+async def _check_in_player(
+		interaction: Interaction,
+		match_id: int,
+		player: Member = SlashOption(name="player", description="The player to check in.", verify=False)
+): await run_slash(bot.commands.set_ready_admin, interaction=interaction, match_id=match_id, player=player)
+_check_in_player.on_autocomplete('match_id')(autocomplete.match_ids)
+
+
 # noadds -> ...
 
 @groups.admin_noadds.subcommand(name='list', description='Show noadds list.')

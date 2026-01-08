@@ -1,5 +1,5 @@
 __all__ = [
-	'show_matches', 'show_teams', 'set_ready', 'sub_me', 'sub_for', 'put',
+	'show_matches', 'show_teams', 'set_ready', 'set_ready_admin', 'sub_me', 'sub_for', 'put',
 	'sub_force', 'cap_me', 'cap_for', 'pick', 'report_admin', 'report', 'report_manual'
 ]
 
@@ -39,6 +39,17 @@ async def show_teams(ctx, match: bot.Match):
 @author_match
 async def set_ready(ctx, match: bot.Match, is_ready=True):
 	await match.check_in.set_ready(ctx, ctx.author, is_ready)
+
+
+async def set_ready_admin(ctx, match_id: int, player: Member):
+	"""Manually check in a player as moderator."""
+	ctx.check_perms(ctx.Perms.MODERATOR)
+	if (match := find(lambda m: m.qc == ctx.qc and m.id == match_id, bot.active_matches)) is None:
+		raise bot.Exc.NotFoundError(ctx.qc.gt("Could not find match with specified id. Check `/matches`."))
+	if player not in match.players:
+		raise bot.Exc.NotFoundError(ctx.qc.gt("Specified player is not in this match."))
+	await match.check_in.set_ready(ctx, player, True)
+	await ctx.reply(ctx.qc.gt("{player} has been checked in.").format(player=f"<@{player.id}>"))
 
 
 @author_match
