@@ -167,16 +167,7 @@ class Embeds:
 			)
 		)
 
-		if len(self.m.teams[0]) == 1 and len(self.m.teams[1]) == 1:  # 1v1
-			p1, p2 = self.m.teams[0][0], self.m.teams[1][0]
-			players = " \u200b {player1}{rating1}\n \u200b {player2}{rating2}".format(
-				rating1=f" \u200b `〈{self.m.ratings[p1.id]}〉`" if show_ranks else "",
-				player1=f"<@{p1.id}>",
-				rating2=f" \u200b `〈{self.m.ratings[p2.id]}〉`" if show_ranks else "",
-				player2=f"<@{p2.id}>",
-			)
-			embed.add_field(name=self.m.gt("Players"), value=players, inline=False)
-		elif len(self.m.teams[0]):  # team vs team
+		if len(self.m.teams[0]) >= 1 and len(self.m.teams[1]) >= 1:  # teams (including 1v1)
 			teams_names = [
 				f"{t.emoji} \u200b **{t.name}**" +
 				(f" \u200b `〈{sum((self.m.ratings[p.id] for p in t))//(len(t) or 1)}〉`" if self.m.ranked else "")
@@ -193,7 +184,8 @@ class Embeds:
 			team_players[1] += "\n\u200b"  # Extra empty line
 			embed.add_field(name=teams_names[0], value=team_players[0], inline=False)
 			embed.add_field(name=teams_names[1], value=team_players[1], inline=False)
-			if self.m.ranked or self.m.cfg['pick_captains']:
+			# Only show captains for team games (not 1v1)
+			if len(self.m.teams[0]) > 1 and (self.m.ranked or self.m.cfg['pick_captains']):
 				embed.add_field(
 					name=self.m.gt("Captains"),
 					value=" \u200b " + join_and([self.m.teams[0][0].mention, self.m.teams[1][0].mention]),
