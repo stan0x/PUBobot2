@@ -71,9 +71,18 @@ class Match:
 			bot.active_servers.append(match.cfg['server'])	
 
 		if match.cfg['map_pools']:
-			pool = copy.deepcopy(next((pool for pool in match.cfg['map_pools'] if pool["name"] == match.cfg['map_current_pool']), 
-						match.cfg['map_default_pool']))
-			match.maps = match.random_maps(pool['maps'], match.cfg['map_count'], queue.last_maps)
+			pool = next((pool for pool in match.cfg['map_pools'] if pool["name"] == match.cfg['map_current_pool']), None)
+			if pool is None:
+				# Current pool not found, try to find default pool by name
+				pool = next((pool for pool in match.cfg['map_pools'] if pool["name"] == match.cfg['map_default_pool']), None)
+			if pool is None:
+				# No valid pool found, use first available pool
+				pool = match.cfg['map_pools'][0] if match.cfg['map_pools'] else None
+			if pool:
+				pool = copy.deepcopy(pool)
+				match.maps = match.random_maps(pool['maps'], match.cfg['map_count'], queue.last_maps)
+			else:
+				match.maps = match.random_maps(match.cfg['maps'], match.cfg['map_count'], queue.last_maps)
 		else:	
 			match.maps = match.random_maps(match.cfg['maps'], match.cfg['map_count'], queue.last_maps)
 
