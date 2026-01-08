@@ -5,6 +5,7 @@ from typing import Callable
 from core.client import dc
 from core.console import log
 from core.utils import get_nick, parse_duration
+from datetime import timedelta
 
 import bot
 
@@ -30,25 +31,28 @@ def message_command(*aliases: str):
 async def on_message(message):
 	if not message.content or message.content == "":
 		return
-
 	if (qc := bot.queue_channels.get(message.channel.id)) is None:
 		return
-
 	# special commands
-	if re.match(r"^\+..", message.content):
-		f, args = _commands.get('add'), [message.content[1:]]
-	elif re.match(r"^-..", message.content):
-		f, args = _commands.get('remove'), [message.content[1:]]
+	if re.match(r"^\+\+..", message.content):
+		f, args = _commands.get('certainadd'), [message.content[2:]]
 	elif message.content == "++":
 		f, args = _commands.get('add'), []
+	elif message.content == "+++":
+		f, args = _commands.get('certainadd'), []
 	elif message.content == "--":
 		f, args = _commands.get('remove'), []
+	elif message.content == "---":
+		f, args = _commands.get('remove'), []
+	elif re.match(r"^\+..", message.content):
+		f, args = _commands.get('add'), [message.content[1:]]	
+	elif re.match(r"^-..", message.content):
+		f, args = _commands.get('remove'), [message.content[1:]]	
 
 	elif message.content[0] == qc.cfg.prefix:
 		cmd_args = message.content[1:].split(' ', 1)
 		f = _commands.get(cmd_args[0])
 		args = cmd_args[1:]
-
 	else:
 		return
 
@@ -81,6 +85,11 @@ async def on_message(message):
 async def _add(ctx: MessageContext, args: str = None):
 	await bot.commands.add(ctx, queues=args)
 
+@message_command('certainadd')
+async def _certainadd(ctx: MessageContext, args: str = None):
+	if (await bot.commands.add(ctx, queues=args)):
+		await bot.commands.expire(ctx, duration=timedelta(hours=2))
+		await bot.commands.force_offline(ctx)
 
 @message_command('remove', 'l')
 async def _remove(ctx: MessageContext, args: str = None):
@@ -96,6 +105,39 @@ async def _remove(ctx: MessageContext, args: str = None):
 async def _queues(ctx: MessageContext, args: str = None):
 	await bot.commands.show_queues(ctx)
 
+'''
+@message_command('pools')
+async def _map_pools(ctx: MessageContext, args: str = None):
+	queue = args.split(' ')[0] if args and len(args.split(' ')) > 0 else None
+	pool = args.split(' ')[1] if args and len(args.split(' ')) > 1 else None
+	await bot.commands.show_map_pools(ctx, queue, pool)
+
+@message_command('pool')
+async def _map_pool(ctx: MessageContext, args: str = None):
+	queue = args.split(' ')[0] if args and len(args.split(' ')) > 0 else None
+	pool = args.split(' ')[1] if args and len(args.split(' ')) > 1 else None
+	await bot.commands.set_map_pool(ctx, queue, pool)
+
+@message_command('pooladd')
+async def _map_pool_add(ctx: MessageContext, args: str = None):
+	queue = args.split(' ')[0] if args and len(args.split(' ')) > 0 else None
+	pool = args.split(' ')[1] if args and len(args.split(' ')) > 1 else None
+	maps = args.split(' ')[2] if args and len(args.split(' ')) > 2 else None
+	await bot.commands.map_pool_add(ctx, queue, pool, maps)
+
+@message_command('pooldel')
+async def _map_pool_remove(ctx: MessageContext, args: str = None):
+	queue = args.split(' ')[0] if args and len(args.split(' ')) > 0 else None
+	pool = args.split(' ')[1] if args and len(args.split(' ')) > 1 else None
+	maps = args.split(' ')[2] if args and len(args.split(' ')) > 2 else None
+	await bot.commands.map_pool_remove(ctx, queue, pool, maps)
+
+@message_command('pooldestroy')
+async def _map_pool_destroy(ctx: MessageContext, args: str = None):
+	queue = args.split(' ')[0] if args and len(args.split(' ')) > 0 else None
+	pool = args.split(' ')[1] if args and len(args.split(' ')) > 1 else None
+	await bot.commands.map_pool_destroy(ctx, queue, pool)
+'''
 
 @message_command('matches')
 async def _matches(ctx: MessageContext, args: str = None):

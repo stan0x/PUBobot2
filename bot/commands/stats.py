@@ -148,7 +148,7 @@ async def rank(ctx, player: Member = None):
 		changes = await db.select(
 			('at', 'rating_change', 'match_id', 'reason'),
 			'qc_rating_history', where=dict(user_id=target.id, channel_id=ctx.qc.rating.channel_id),
-			order_by='id', limit=5
+			order_by='id', limit=10
 		)
 		if len(changes):
 			embed.add_field(
@@ -157,7 +157,7 @@ async def rank(ctx, player: Member = None):
 					ago=seconds_to_str(int(time() - c['at'])),
 					reason=c['reason'],
 					match_id=f"(__{c['match_id']}__)" if c['match_id'] else "",
-					change=("+" if c['rating_change'] >= 0 else "") + str(c['rating_change'])
+					change=("🟩 +" if c['rating_change'] > 0 else "🟥 " if c['rating_change'] < 0 else "🟨 ") + str(c['rating_change'])
 				) for c in changes))
 			)
 		await ctx.reply(embed=embed)

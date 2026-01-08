@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from core.console import log
-from core.cfg_factory import FactoryTable, CfgFactory, Variables, VariableTable
+from core.cfg_factory import FactoryTable, CfgFactory, Variables, VariableTable, ListTable
 from core.utils import get_nick, get, SafeTemplateDict
 from core.client import dc
 
 import bot
 
-
 class PickupQueue:
-
 	cfg_factory = CfgFactory(
 		table=FactoryTable(name="pq_configs", p_key="pq_id", f_key="channel_id"),
 		name="pq_config",
@@ -142,6 +140,14 @@ class PickupQueue:
 				verify_message="Team emojis must be exactly two emojis separated by space.",
 				description="Team emojis separated by space."
 			),
+			Variables.BoolVar(
+				"show_teams_when_voting",
+				display="Show teams while voting maps",
+				section="Teams",
+				default=1,
+				notnull=True,
+				description="Show teams when voting maps on check-in."
+			),
 			Variables.TextVar(
 				"start_msg",
 				display="Start message",
@@ -169,6 +175,23 @@ class PickupQueue:
 				description="Print this server on a match start.",
 				verify=lambda s: len(s) < 501,
 				verify_message="Server string is too long."
+			),
+			VariableTable(
+				"servers",
+				display="Servers",
+				section="Appearance",
+				description="List of servers that will be randomly displayed on a match start. Format [{\"name\": \"server:port\"}]",
+				variables=[
+					Variables.StrVar("name", notnull=True)
+				]
+			),
+			Variables.BoolVar(
+				"vote_server",
+				display="Enable server voting",
+				section="Appearance",
+				default=0,
+				notnull=True,
+				description="Enable server voting from the servers variable. If vote_server is disabled, servers will be randomized."
 			),
 			Variables.RoleVar(
 				"promotion_role",
@@ -216,6 +239,22 @@ class PickupQueue:
 				section="General",
 				description="Set a custom match life time before it times out then ranked is enabled. Default: 3 hours."
 			),
+			Variables.TextVar(
+				"map_default_pool",
+				display="Default Map Pool",
+				section="Maps",
+				default='default',
+				notnull=True,
+				description="This pool will be used by default for the queue."
+			),
+			Variables.TextVar(
+				"map_current_pool",
+				display="Current Map Pool",
+				section="Maps",
+				default='default',
+				notnull=True,
+				description="This pool will be used by for the nexte queues. It changes with votes or by setting it."
+			),
 			Variables.IntVar(
 				"map_count",
 				display="Map count",
@@ -238,6 +277,17 @@ class PickupQueue:
 					"This affects map voting pools as well. Set 0 to disable."
 				])
 			),
+			VariableTable(
+				"map_pools",
+				display="Map pools (RAW)",
+				section="Maps",
+				description="List of map pools with maps.",
+				default=[],
+				variables=[
+					Variables.StrVar("name", notnull=True),
+					ListTable("maps")
+				]
+			),
 			Variables.IntVar(
 				"vote_maps",
 				display="Vote poll map count",
@@ -256,7 +306,7 @@ class PickupQueue:
 			),
 			VariableTable(
 				"maps", display="Maps", section="Maps",
-				description="List of maps to choose from.",
+				description="List of maps to choose from. Format [ {\"name\": \"default\", \"maps\": [\"urban\",\"urban2\"]},... ]",
 				variables=[
 					Variables.StrVar("name", notnull=True)
 				]
@@ -334,7 +384,10 @@ class PickupQueue:
 			maps=[i['name'] for i in self.cfg.maps], vote_maps=self.cfg.vote_maps,
 			map_count=self.cfg.map_count, check_in_timeout=self.cfg.check_in_timeout,
 			check_in_discard=self.cfg.check_in_discard, match_lifetime=self.cfg.match_lifetime,
-			start_msg=self.cfg.start_msg, server=self.cfg.server
+			start_msg=self.cfg.start_msg, server=self.cfg.server, servers=self.cfg.servers,
+			map_pools=self.cfg.map_pools, map_default_pool=self.cfg.map_default_pool,
+			map_current_pool=self.cfg.map_current_pool,
+			vote_server=self.cfg.vote_server, show_teams_when_voting=self.cfg.show_teams_when_voting
 		)
 
 	async def promote(self, ctx):
@@ -357,6 +410,9 @@ class PickupQueue:
 			await ctx.notice(promotion_msg)
 
 	async def reset(self):
+		for member in self.queue:
+			await member.send(content="THE QUEUE HAS BEEN CLEARED! Please readd if you want to play.")
+
 		self.queue = []
 		if self in bot.active_queues:
 			bot.active_queues.remove(self)

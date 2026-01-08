@@ -33,8 +33,7 @@ def ctrl_c(sig, frame):
 	bot.save_state()
 	console.terminate()
 	signal.signal(signal.SIGINT, original_SIGINT_handler)
-
-
+	
 signal.signal(signal.SIGINT, ctrl_c)
 
 
@@ -61,7 +60,7 @@ async def think():
 	for task in dc.events['on_init']:
 		await task()
 
-	# Loop runs roughly every 1 second
+	# Loop runs roughly every 0.1 second for console parsing and task executions
 	while console.alive:
 		frame_time = time.time()
 		await run_console()
@@ -70,7 +69,7 @@ async def think():
 				await task(frame_time)
 			except Exception as e:
 				log.error('Error running background task from {}: {}\n{}'.format(task.__module__, str(e), traceback.format_exc()))
-		await asleep(1)
+		await asleep(0.1)
 
 	# Exit signal received
 	for task in dc.events['on_exit']:
@@ -92,6 +91,7 @@ async def think():
 	log.close()
 	print("Exit now.")
 	loop.stop()
+	os.system('reset -I')
 
 # Login to discord
 DC_BOT_TOKEN = os.environ.get('DC_BOT_TOKEN') if os.environ.get('DC_BOT_TOKEN') else config.cfg.DC_BOT_TOKEN
