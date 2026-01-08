@@ -186,6 +186,13 @@ class CheckIn:
 					self.map_votes[idx].discard(user_id)
 					#self.ready_players.discard(users[user_id])
 				else:
+					# Check vote limit before adding
+					vote_limit = self.m.cfg.get('vote_maps_limit')
+					if vote_limit:
+						current_votes = sum(1 for votes in self.map_votes if user_id in votes)
+						if current_votes >= vote_limit:
+							# Player already at vote limit, don't add vote
+							return
 					self.map_votes[idx].add(user_id)
 					self.ready_players.add(users[user_id])
 				await self.refresh(bot.SystemContext(self.m.queue.qc))

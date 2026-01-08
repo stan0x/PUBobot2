@@ -297,6 +297,15 @@ class PickupQueue:
 				verify_message="Vote maps number must be between 2 and 9.",
 				description="Set to enable map voting, this requires check-in timeout to be set."
 			),
+			Variables.IntVar(
+				"vote_maps_limit",
+				display="Max votes per player",
+				section="Maps",
+				default=None,
+				verify=lambda n: 1 <= n <= 9,
+				verify_message="Vote limit must be between 1 and 9.",
+				description="Maximum number of maps a player can vote for. Leave empty for unlimited."
+			),
 			VariableTable(
 				"aliases", display="Aliases", section="General",
 				description="Other names for this queue, you can also group queues by giving them a same alias.",
@@ -382,7 +391,7 @@ class PickupQueue:
 			captains_role_id=self.cfg.captains_role.id if self.cfg.captains_role else None,
 			pick_teams=self.cfg.pick_teams, pick_order=self.cfg.pick_order,
 			maps=[i['name'] for i in self.cfg.maps], vote_maps=self.cfg.vote_maps,
-			map_count=self.cfg.map_count, check_in_timeout=self.cfg.check_in_timeout,
+			vote_maps_limit=self.cfg.vote_maps_limit, map_count=self.cfg.map_count, check_in_timeout=self.cfg.check_in_timeout,
 			check_in_discard=self.cfg.check_in_discard, match_lifetime=self.cfg.match_lifetime,
 			start_msg=self.cfg.start_msg, server=self.cfg.server, servers=self.cfg.servers,
 			map_pools=self.cfg.map_pools, map_default_pool=self.cfg.map_default_pool,

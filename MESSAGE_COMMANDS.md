@@ -17,6 +17,11 @@
 | !set_channel_cfg | `json`     |             |       | Apply json configuration to channel |
 | !set_queue_cfg   | `json`     |             |       | Apply json configuration to queue   |
 
+#### Queue Settings (slash commands)
+| command   | arg1         | arg2               | arg3    | Description                                              |
+|-----------|--------------|--------------------|---------|---------------------------------------------------------|
+| /set queue| `queue_name` | vote_maps_limit    | `1-9`   | Max number of maps a player can vote for (empty = unlimited) |
+
 #### Info
 | command         | arg1                  | description                                               |
 |-----------------|-----------------------|-----------------------------------------------------------|
